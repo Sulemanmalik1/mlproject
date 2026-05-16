@@ -1,24 +1,33 @@
+import logging
+import os
 import sys
-from src.logger import logging
+from datetime import datetime
 
-def error_message_detail(error,error_detail:sys):
-    _,_,exc_tb=error_detail.exc_info()
-    file_name=exc_tb.tb_frame.f_code.co_filename
-    error_message="Error occured in python script name [{0}] line number [{1}] error message[{2}]".format(
-     file_name,exc_tb.tb_lineno,str(error))
+# 1. Setup paths
+LOG_FILE = f"{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.log"
+logs_path = os.path.join(os.getcwd(), "logs")
+os.makedirs(logs_path, exist_ok=True)
+LOG_FILE_PATH = os.path.join(logs_path, LOG_FILE)
 
-    return error_message
+# 2. Create a logger object
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-    
+# 3. Create the format
+formatter = logging.Formatter("[ %(asctime)s ] %(lineno)d %(name)s - %(levelname)s - %(message)s")
 
-class CustomException(Exception):
-    def __init__(self,error_message,error_detail:sys):
-        super().__init__(error_message)
-        self.error_message=error_message_detail(error_message,error_detail=error_detail)
-    
-    def __str__(self):
-        return self.error_message
-    
+# 4. Create File Handler and add to logger
+file_handler = logging.FileHandler(LOG_FILE_PATH)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
+# 5. Create Terminal Handler and add to logger
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
-        
+if __name__ == "__main__":
+    logging.info("FORCE LOG TEST")
+    # This manually forces the file to save immediately
+    for handler in logger.handlers:
+        handler.flush()
